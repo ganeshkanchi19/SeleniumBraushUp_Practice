@@ -35,7 +35,7 @@ public class SelectDemo {
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 		WebElement carSel = driver.findElement(By.xpath("//select[@id='carselect']"));
 		Select s = new Select(carSel);
-		s.selectByVisibleText("Honda");
+		s.selectByVisibleText("Benz");
 		String selcText = s.getFirstSelectedOption().getText();
 		System.out.println("Selected value is: " + selcText);
 		File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
