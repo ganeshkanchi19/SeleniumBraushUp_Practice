@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="SmokeSuite">
 
-	<test thread-count="1" name="Test">
+<suite name="SmokeSuite" parallel="methods" thread-count="3">
+
+	<test name="ParallelTest">
 		<classes>
 			<class name="m1.SelectDemo" />
+			<class name="m1.MuliSelectDemo" />
+			<class name="m1.AlertDemoTest" />
 		</classes>
-	</test> <!-- Test -->
+	</test>
 
-	<!-- Register ExtentReports listener -->
 	<listeners>
-		<listener class-name="reports.ExtentListener" />
+		<listener class-name="listeners.ExtentListener" />
 	</listeners>
-</suite> <!-- Suite -->
+
+</suite>
