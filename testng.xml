@@ -11,6 +11,10 @@
 			<class name="m1.NestedFrameTest" />
 			<class name="m1.WindowHandleDemo" />
 			<class name="m1.IFrameTestDemo" />
+			<class name="m1.ActionsDemoTest" />
+			<class name="m1.LinksDemoTest" />
+			<class name="m1.WebTablesDemo" />
+
 		</classes>
 	</test>
 
