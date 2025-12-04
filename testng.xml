@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
-<suite name="RegressionSuite" parallel="methods" thread-count="6">
+<suite name="RegressionSuite" parallel="methods" thread-count="1">
 
 	<test name="ParallelTest">
 		<classes>
@@ -14,6 +14,11 @@
 			<class name="m1.ActionsDemoTest" />
 			<class name="m1.LinksDemoTest" />
 			<class name="m1.WebTablesDemo" />
+			<class name="m1.DatePickerDemoTest" />
+			<class name="m1.DifferentWaysToRefresh" />
+			<class name="m1.KeyboardActionsDemoTest" />
+			<class name="m1.TooltipDemoTest" />
+			<class name="m1.FileUploadDemoTest" />
 
 		</classes>
 	</test>
