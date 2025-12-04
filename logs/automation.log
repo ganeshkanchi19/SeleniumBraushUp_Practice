@@ -1,0 +1,16 @@
+2025-12-03 12:52:50 INFO  [CheckBoxTest] - Launching chrome browser
+2025-12-03 12:52:54 INFO  [CheckBoxTest] - Browser launched successfully.
+2025-12-03 12:52:56 INFO  [CheckBoxTest] - Navigating to letskodeit practice page.
+2025-12-03 12:53:15 INFO  [CheckBoxTest] - BMW checkbox not selected — clicking it.
+2025-12-03 12:53:15 INFO  [CheckBoxTest] - Checking if Benz checkbox is displayed.
+2025-12-03 12:53:15 INFO  [CheckBoxTest] - Benz checkbox displayed — clicking it.
+2025-12-03 12:53:15 INFO  [CheckBoxTest] - Checking if Honda checkbox is enabled.
+2025-12-03 12:53:15 INFO  [CheckBoxTest] - Honda checkbox enabled — clicking it.
+2025-12-03 12:53:15 INFO  [CheckBoxTest] - Taking screenshot...
+2025-12-03 12:53:16 INFO  [CheckBoxTest] - Closing browser...
+2025-12-03 12:53:16 INFO  [CheckBoxTest] - Browser closed successfully.
+2025-12-04 10:07:34 INFO  [CheckBoxTest] - Selecting the file for uploading
+2025-12-04 10:26:42 INFO  [CheckBoxTest] - Selecting the multiple files for uploading
+2025-12-04 10:26:44 INFO  [CheckBoxTest] - Selecting the file for uploading
+2025-12-04 10:32:01 INFO  [CheckBoxTest] - Selecting the multiple files for uploading
+2025-12-04 10:32:04 INFO  [CheckBoxTest] - Selecting the file for uploading
