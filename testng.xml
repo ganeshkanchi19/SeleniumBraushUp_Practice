@@ -19,7 +19,12 @@
 			<class name="m1.KeyboardActionsDemoTest" />
 			<class name="m1.TooltipDemoTest" />
 			<class name="m1.FileUploadDemoTest" />
-
+			<class name="m1.AutoSuggestionDemoTest" />
+			<class name="m1.DymamicWebTable" />
+			<class name="m1.DynamicButtonDemoTest" />
+			<class name="m1.PaginationDemoTest" />
+			<class name="m1.SearchProductAcrossPages" />
+			<class name="m1.ScrollingDropDownTest" />
 		</classes>
 	</test>
 
