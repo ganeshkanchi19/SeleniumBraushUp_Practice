@@ -21,7 +21,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                bat 'mvn -Dsurefire.suiteXmlFiles=testng.xml test'
+                bat 'mvn -Dsurefire.suiteXmlFiles=testng-parallel.xml test'
             }
         }
 
