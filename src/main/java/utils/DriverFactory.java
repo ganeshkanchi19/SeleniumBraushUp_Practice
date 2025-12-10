@@ -15,192 +15,191 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * DriverFactory: creates thread-local WebDriver instances.
+ * DriverFactory: creates thread-local WebDriver instances optimized for local
+ * and CI/Grid runs.
  *
- * - If system property "use.remote" is true (default true) it creates a RemoteWebDriver
- *   pointed at system property "remote.url" (default http://localhost:4444).
- * - If "use.remote" is false it creates a local ChromeDriver or FirefoxDriver and
- *   uses WebDriverManager to auto-download the correct driver binary for the local browser.
- *
- * Use system property "ci.headless=true" to force headless mode in CI runs.
+ * Properties: - use.remote (boolean, default true) -> use RemoteWebDriver at
+ * remote.url - remote.url (string, default http://localhost:4444) - ci.headless
+ * (boolean, default true) -> run headless in CI
  */
 public class DriverFactory {
 
-    // thread-local driver container
-    private static final ThreadLocal<WebDriver> tlDriver = new ThreadLocal<>();
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(DriverFactory.class);
+	private static final ThreadLocal<WebDriver> tlDriver = new ThreadLocal<>();
+	private static final org.slf4j.Logger log = LoggerFactory.getLogger(DriverFactory.class);
 
-    /**
-     * Initialize a browser for the current thread.
-     *
-     * @param browser "chrome" or "firefox" (case-insensitive)
-     */
-    public static void initDriver(String browser) {
-        if (tlDriver.get() != null) {
-            System.out.println("DriverFactory: driver already initialized for thread " + Thread.currentThread().getId());
-            return;
-        }
+	public static void initDriver(String browser) {
+		if (tlDriver.get() != null) {
+			log.debug("DriverFactory: driver already initialized for thread {}", Thread.currentThread().getId());
+			return;
+		}
 
-        String remoteUrl = System.getProperty("remote.url", "http://localhost:4444");
-        boolean useRemote = Boolean.parseBoolean(System.getProperty("use.remote", "true"));
-        boolean ciHeadless = Boolean.parseBoolean(System.getProperty("ci.headless", "true")); // default true in CI
-        log.debug("initDriver useRemote={}, remoteUrl={}, requestedBrowser={}, thread={}", useRemote, remoteUrl, browser, Thread.currentThread().getId());
+		String remoteUrl = System.getProperty("remote.url", "http://localhost:4444");
+		boolean useRemote = Boolean.parseBoolean(System.getProperty("use.remote", "true"));
+		boolean ciHeadless = Boolean.parseBoolean(System.getProperty("ci.headless", "true"));
 
-        if (useRemote) {
-            // existing RemoteWebDriver creation (unchanged)
-            int attempts = 0;
-            int maxAttempts = 3;
-            while (attempts < maxAttempts) {
-                attempts++;
-                try {
-                    URL gridUrl = new URL(remoteUrl);
-                    switch (browser.toLowerCase()) {
-                        case "chrome": {
-                            ChromeOptions chromeOptions = new ChromeOptions();
-                            chromeOptions.addArguments("--no-sandbox");
-                            chromeOptions.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-                            // Add remote-friendly options if desired
-                            tlDriver.set(new RemoteWebDriver(gridUrl, chromeOptions));
-                            break;
-                        }
-                        case "firefox":
-                        case "mozilla": {
-                            FirefoxOptions ffOptions = new FirefoxOptions();
-                            ffOptions.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-                            tlDriver.set(new RemoteWebDriver(gridUrl, ffOptions));
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException("Unsupported browser: " + browser);
-                    }
+		log.debug("initDriver useRemote={}, remoteUrl={}, requestedBrowser={}, thread={}", useRemote, remoteUrl,
+				browser, Thread.currentThread().getId());
 
-                    // after creation, log actual capabilities & session id (helpful for debugging)
-                    try {
-                        WebDriver wd = tlDriver.get();
-                        if (wd instanceof RemoteWebDriver) {
-                            RemoteWebDriver rd = (RemoteWebDriver) wd;
-                            Capabilities caps = rd.getCapabilities();
-                            Object sessionId = rd.getSessionId();
-                            log.debug("created remote driver: browser={}, version={}, platform={}, session={}",
-                                    caps.getBrowserName(), caps.getBrowserVersion(), caps.getPlatformName(), sessionId);
-                        } else {
-                            System.out.println("DriverFactory: created remote driver (non-RemoteWebDriver) for thread=" + Thread.currentThread().getId() + " requested=" + browser);
-                        }
-                    } catch (Throwable t) {
-                        System.err.println("DriverFactory: couldn't read capabilities after creation: " + t.getMessage());
-                    }
+		if (useRemote) {
+			// Remote: try a few times (useful if Grid starts slowly)
+			int attempts = 0;
+			int maxAttempts = 3;
+			while (attempts < maxAttempts) {
+				attempts++;
+				try {
+					URL gridUrl = new URL(remoteUrl);
+					switch (browser.toLowerCase()) {
+					case "chrome": {
+						ChromeOptions chromeOptions = createCiChromeOptions(ciHeadless);
+						// ensure explicit W3C capability for browserName (some grids require it)
+						chromeOptions.setCapability("browserName", "chrome");
+						tlDriver.set(new RemoteWebDriver(gridUrl, chromeOptions));
+						break;
+					}
+					case "firefox": {
+						FirefoxOptions ffOptions = createCiFirefoxOptions(ciHeadless);
+						ffOptions.setCapability("browserName", "firefox");
+						tlDriver.set(new RemoteWebDriver(gridUrl, ffOptions));
+						break;
+					}
+					default:
+						throw new IllegalArgumentException("Unsupported browser: " + browser);
+					}
 
-                    // set sensible defaults for this driver instance
-                    try {
-                        WebDriver wd = tlDriver.get();
-                        wd.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-                        wd.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
-                    } catch (Exception ignored) {}
+					// log capabilities (very useful to debug grid)
+					try {
+						WebDriver wd = tlDriver.get();
+						if (wd instanceof RemoteWebDriver) {
+							RemoteWebDriver rd = (RemoteWebDriver) wd;
+							Capabilities caps = rd.getCapabilities();
+							log.debug("created remote driver: browser={}, version={}, platform={}, session={}",
+									caps.getBrowserName(), caps.getBrowserVersion(), caps.getPlatformName(),
+									rd.getSessionId());
+						}
+					} catch (Throwable t) {
+						log.warn("DriverFactory: couldn't read capabilities after creation: {}", t.getMessage());
+					}
 
-                    break; // success -> exit retry loop
-                } catch (MalformedURLException mue) {
-                    throw new RuntimeException("Invalid remote URL: " + remoteUrl, mue);
-                } catch (Exception e) {
-                    System.err.println("DriverFactory: attempt " + attempts + " failed to create remote driver: " + e.getMessage());
-                    if (attempts >= maxAttempts) {
-                        throw new RuntimeException("Failed to create remote driver after " + attempts + " attempts", e);
-                    }
-                    try {
-                        Thread.sleep(1000L);
-                    } catch (InterruptedException ignored) {}
-                }
-            }
-        } else {
-            // Local driver fallback (auto-manage driver binaries using WebDriverManager)
-            switch (browser.toLowerCase()) {
-                case "chrome": {
-                    // Download matching chromedriver if needed
-                    WebDriverManager.chromedriver().setup();
+					// set sane timeouts
+					try {
+						WebDriver wd = tlDriver.get();
+						wd.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+						wd.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
+					} catch (Exception ignored) {
+					}
 
-                    ChromeOptions options = new ChromeOptions();
-                    options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+					break; // success
+				} catch (MalformedURLException mue) {
+					throw new RuntimeException("Invalid remote URL: " + remoteUrl, mue);
+				} catch (Exception e) {
+					log.error("DriverFactory: attempt {} failed to create remote driver: {}", attempts, e.getMessage());
+					if (attempts >= maxAttempts) {
+						throw new RuntimeException("Failed to create remote driver after " + attempts + " attempts", e);
+					}
+					try {
+						Thread.sleep(1000L);
+					} catch (InterruptedException ignored) {
+					}
+				}
+			}
+		} else {
+			// Local: auto-manage binaries and start local browsers
+			switch (browser.toLowerCase()) {
+			case "chrome": {
+				WebDriverManager.chromedriver().setup();
+				ChromeOptions options = createCiChromeOptions(ciHeadless);
+				tlDriver.set(new ChromeDriver(options));
+				break;
+			}
+			case "firefox": {
+				WebDriverManager.firefoxdriver().setup();
+				FirefoxOptions options = createCiFirefoxOptions(ciHeadless);
+				tlDriver.set(new FirefoxDriver(options));
+				break;
+			}
+			default:
+				throw new IllegalArgumentException("Unsupported browser: " + browser);
+			}
 
-                    // CI-friendly defaults — allow ci.headless property to control
-                    if (ciHeadless) {
-                        options.addArguments("--headless=new"); // selenium 4 new headless mode
-                        options.addArguments("--disable-gpu");
-                    }
-                    options.addArguments("--no-sandbox");
-                    options.addArguments("--disable-dev-shm-usage");
-                    options.addArguments("--window-size=1366,768");
-                    options.addArguments("--disable-extensions");
-                    options.addArguments("--disable-background-networking");
-                    options.addArguments("--disable-renderer-backgrounding");
+			log.debug("DriverFactory: created local driver for thread={} browser={}", Thread.currentThread().getId(),
+					browser);
 
-                    tlDriver.set(new ChromeDriver(options));
-                    break;
-                }
-                case "firefox": {
-                    // Download matching geckodriver if needed
-                    WebDriverManager.firefoxdriver().setup();
+			try {
+				WebDriver wd = tlDriver.get();
+				wd.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+				wd.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
+			} catch (Exception ignored) {
+			}
+		}
+	}
 
-                    FirefoxOptions options = new FirefoxOptions();
-                    options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+	public static WebDriver getDriver() {
+		WebDriver wd = tlDriver.get();
+		if (wd == null) {
+			log.error("DriverFactory.getDriver(): driver is null for thread {} — did you call initDriver(browser)?",
+					Thread.currentThread().getId());
+		}
+		return wd;
+	}
 
-                    if (ciHeadless) {
-                        options.addArguments("--headless");
-                    }
-                    // window size is set via capabilities for firefox if needed
-                    options.addPreference("intl.accept_languages", "en-US");
+	public static void removeDriver() {
+		WebDriver wd = tlDriver.get();
+		if (wd != null) {
+			try {
+				wd.quit();
+			} catch (Exception e) {
+				log.warn("DriverFactory.removeDriver() - error quitting driver: {}", e.getMessage());
+			} finally {
+				tlDriver.remove();
+			}
+		}
+	}
 
-                    tlDriver.set(new FirefoxDriver(options));
-                    break;
-                }
-                default:
-                    throw new IllegalArgumentException("Unsupported browser: " + browser);
-            }
+	// ---------- helper methods for options ----------
+	private static ChromeOptions createCiChromeOptions(boolean headless) {
+		ChromeOptions options = new ChromeOptions();
 
-            System.out.println("DriverFactory: created local driver for thread=" + Thread.currentThread().getId() + " browser=" + browser);
+		// basic CI-friendly args
+		options.addArguments("--no-sandbox");
+		options.addArguments("--disable-dev-shm-usage");
+		options.addArguments("--disable-gpu");
+		options.addArguments("--disable-extensions");
+		options.addArguments("--disable-popup-blocking");
+		options.addArguments("--window-size=1366,768");
+		options.addArguments("--disable-background-networking");
+		options.addArguments("--disable-background-timer-throttling");
+		options.addArguments("--disable-renderer-backgrounding");
+		options.addArguments("--disable-infobars");
+		options.addArguments("--disable-blink-features=AutomationControlled");
+		options.setExperimentalOption("useAutomationExtension", false);
+		options.setExperimentalOption("excludeSwitches", new String[] { "enable-automation" });
+		options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
 
-            // set timeouts
-            try {
-                WebDriver wd = tlDriver.get();
-                wd.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-                wd.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
-            } catch (Exception ignored) {}
-        }
-    }
+		if (headless) {
+			// prefer new headless if supported; fallback will be handled by Chrome itself
+			options.addArguments("--headless=new");
+		}
 
-    public static WebDriver getDriver() {
-        WebDriver wd = tlDriver.get();
-        if (wd == null) {
-            System.err.println("DriverFactory.getDriver(): driver is null for thread " + Thread.currentThread().getId() + " — did you call initDriver(browser)?");
-        }
-        return wd;
-    }
+		// Add small user-data-dir if desired (uncomment to avoid profile lock issues)
+		// try { Path p = Files.createTempDirectory("chrome-ud");
+		// options.addArguments("--user-data-dir=" + p.toAbsolutePath().toString()); }
+		// catch (IOException ignored) {}
 
-    public static void removeDriver() {
-        WebDriver wd = tlDriver.get();
-        if (wd != null) {
-            try {
-                wd.quit();
-            } catch (Exception e) {
-                System.err.println("DriverFactory.removeDriver() - error quitting driver: " + e.getMessage());
-            } finally {
-                tlDriver.remove();
-            }
-        }
-    }
+		return options;
+	}
 
-    // Helper to print capability map concisely
-    private static String capabilityMap(Capabilities caps) {
-        try {
-            Map<String, ?> map = caps.asMap();
-            return map.toString();
-        } catch (Exception e) {
-            try {
-                return "browserName=" + caps.getBrowserName();
-            } catch (Exception ex) {
-                return "unknownCaps";
-            }
-        }
-    }
+	private static FirefoxOptions createCiFirefoxOptions(boolean headless) {
+		FirefoxOptions options = new FirefoxOptions();
+		options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+		if (headless) {
+			options.addArguments("--headless");
+		}
+		// set preferences if needed:
+		options.addPreference("intl.accept_languages", "en-US");
+		return options;
+	}
 }
