@@ -6,70 +6,70 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import base.BaseTest;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import utils.ScreenshotUtil;
 
+/**
+ * DifferentWaysToRefresh — now uses BaseTest/DriverFactory (no local driver
+ * creation) Works safely with parallel execution / CI.
+ */
 public class DifferentWaysToRefresh extends BaseTest {
-	WebDriver driver;
-	WebDriverWait wait;
-	JavascriptExecutor js = (JavascriptExecutor) driver;
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
+	private WebDriver driver;
+	private WebDriverWait wait;
+	private JavascriptExecutor js;
+
+	@BeforeMethod(alwaysRun = true)
+	public void setup() {
+
+		driver = getDriver(); // get thread-local WebDriver from BaseTest
+
+		if (driver == null) {
+			throw new IllegalStateException("Driver is null — BaseTest failed to initialize it.");
+		}
+
 		driver.manage().window().maximize();
-		// short implicit is fine but prefer explicit waits below
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+
 		wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+		js = (JavascriptExecutor) driver;
 	}
 
 	@Test
 	public void refreshTestDemo() {
-		// Using refresh() method
+		// 1️⃣ Using driver.navigate().refresh()
 		driver.get("https://testautomationpractice.blogspot.com/#");
 		driver.navigate().refresh();
 		System.out.println("Refreshing the web page using normal refresh() method");
 		ScreenshotUtil.capture(driver, "Normal_Refresh_Method");
 
-		// Using sendkeys() method by passing the F5 key
+		// 2️⃣ Using SendKeys → F5
 		driver.get("https://www.toolsqa.com");
 		driver.findElement(By.xpath("//input[@class='navbar__search--input']")).sendKeys(Keys.F5);
 		System.out.println("Refreshing the web page using keyboard Keys F5");
 		ScreenshotUtil.capture(driver, "UsingF5Key");
 
-		// Using another command as an argument to it
+		// 3️⃣ Using get(currentUrl)
 		driver.get("https://www.letskodeit.com/practice");
 		driver.get(driver.getCurrentUrl());
 		System.out.println("Using another command as an argument to it");
 		ScreenshotUtil.capture(driver, "UsingAnotherCommandArgument");
 
-		// navigate().to() is feeding with a page URL and an argument.
+		// 4️⃣ Using navigate().to(currentUrl)
 		driver.get("https://jqueryui.com/tooltip/");
 		driver.navigate().to(driver.getCurrentUrl());
 		System.out.println("Navigate().to() is feeding with a page URL and an argument.");
 		ScreenshotUtil.capture(driver, "UsingNavigateTo()");
 
-		// Passing ASCII code in the sendkeys() method
+		// 5️⃣ Using ASCII equivalent of F5 → "\uE035"
 		driver.get("https://www.toolsqa.com");
 		driver.findElement(By.xpath("//input[@class='navbar__search--input']")).sendKeys("\uE035");
-		System.out.println("Refreshing the web page using sendkeys method and passing ASCII code to it");
+		System.out.println("Refreshing using ASCII code via sendKeys()");
 		ScreenshotUtil.capture(driver, "PassingASCIICode");
-
 	}
 
-	@AfterTest
-	public void browserClose() {
-		if (driver != null) {
-			driver.quit();
-		}
-	}
-
+	// ❌ Do NOT quit driver here — BaseTest handles quitting
 }

@@ -5,58 +5,61 @@ import java.time.Duration;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import base.BaseTest;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import utils.ScreenshotUtil;
 import utils.ScrollUtil;
 
 public class IFrameTestDemo extends BaseTest {
-	WebDriver driver;
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
-	}
+    private WebDriver driver;
+    private WebDriverWait wait;
 
-	@Test
-	public void iframeCheck() {
-		// navigate to url
-		driver.get("https://demoqa.com/frames");
-		
-		// Maximize the window
-		driver.manage().window().maximize();
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
+    @BeforeMethod(alwaysRun = true)
+    public void setup() {
 
-		// Switch to Frame using Index
-		driver.switchTo().frame("frame1");
+        driver = getDriver();
+        if (driver == null) {
+            throw new IllegalStateException("Driver is null — BaseTest failed to initialize driver.");
+        }
 
-		// Identifying the heading in webelement
-		WebElement frame1head = driver.findElement(By.xpath("//h1[@id='sampleHeading']"));
-		
-		//Scrolling to the specific webelement
-		ScrollUtil.scrollToElement(driver, frame1head);
+        try { driver.manage().window().maximize(); } catch (Exception ignored) {}
+        try { driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5)); } catch (Exception ignored) {}
 
-		// Finding the text of the heading
-		String frame1Text = frame1head.getText();
-		
-        //Printing the text of the frame 
-		System.out.println("Text of the frame is : " + frame1Text);
-		
-		//Finally taking the screenshots
-		ScreenshotUtil.capture(driver, "Frame1Demo");
-	}
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+    }
 
-	@AfterTest
-	public void browserClose() {
-		if (driver != null) {
-			driver.quit();
-		}
-	}
+    @Test
+    public void iframeCheck() {
 
+        // Navigate to URL
+        driver.get("https://demoqa.com/frames");
+
+        // Switch to iframe using ID
+        wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt("frame1"));
+
+        // Locate the heading inside iframe
+        WebElement frame1head = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(By.xpath("//h1[@id='sampleHeading']"))
+        );
+
+        // Scroll to the element (your custom utility)
+        ScrollUtil.scrollToElement(driver, frame1head);
+
+        // Get text
+        String frame1Text = frame1head.getText();
+        System.out.println("Text of the frame is : " + frame1Text);
+
+        // Screenshot
+        ScreenshotUtil.capture(driver, "Frame1Demo");
+
+        // IMPORTANT: Switch back to main content after iframe usage
+        driver.switchTo().defaultContent();
+    }
+
+    // No @AfterTest → BaseTest handles quitting the browser
 }

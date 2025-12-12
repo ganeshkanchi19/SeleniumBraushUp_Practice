@@ -7,88 +7,93 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import base.BaseTest;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import utils.ScreenshotUtil;
 
 public class EnableDisableDemoTest extends BaseTest {
-	WebDriver driver;
-	WebDriverWait wait;
-	JavascriptExecutor js;
-	private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager
-			.getLogger(CheckBoxTest.class);
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
-		js = (JavascriptExecutor) driver;
-		driver.manage().window().maximize();
-		// short implicit is fine but prefer explicit waits below
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-		wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-	}
+    private WebDriver driver;
+    private WebDriverWait wait;
+    private JavascriptExecutor js;
 
-	@Test
-	public void enabledisableCheck() {
-		driver.get("https://www.letskodeit.com/practice");
-		WebElement enadisbField = driver.findElement(By.xpath("//input[@id='enabled-example-input']"));
-		enadisbField.sendKeys("Java");
-		String beforedis = enadisbField.getAttribute("value");
-		System.out.println("Text before disabling the field is : " + beforedis);
-		WebElement disablebtn = driver.findElement(By.xpath("//input[@id='disabled-button']"));
-		disablebtn.click();
-		if (!(enadisbField.isEnabled())) {
-			System.out.println("Enabled/Disabled field is disabled successfully");
-		} else {
-			System.out.println("Error while disabling the Enabled/Disabled field");
-		}
-		ScreenshotUtil.capture(driver, "EnableDisable_Check");
-		wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-		// Click Enable to enable the input again
-		WebElement enablebtn = driver.findElement(By.xpath("//input[@id='enabled-button']"));
-		wait.until(ExpectedConditions.visibilityOf(enablebtn));
-		enablebtn.click();
-		wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-		Actions actions = new Actions(driver);
-		if (enadisbField.isEnabled()) {
-			// Place caret at the end and type "Programming"
-			// Using Actions to move focus and press END before typing ensures append
-			// behavior.
-			actions.moveToElement(enadisbField).click().sendKeys(Keys.END).perform();
-			// now append the text
-			enadisbField.sendKeys("Programming");
-		} else {
-			System.out.println("Error while enabling the Enabled/Disabled field");
-		}
-		// Read final text and print
-		String finalText = enadisbField.getAttribute("value");
-		System.out.println("Final text in field is : " + finalText);
+    private static final org.apache.logging.log4j.Logger log =
+            org.apache.logging.log4j.LogManager.getLogger(EnableDisableDemoTest.class);
 
-		// Optional assertion
-		if ("JavaProgramming".equalsIgnoreCase(finalText)) {
-			System.out.println("PASS: Final text matches expected JavaProgramming");
-		} else {
-			System.out.println("FAIL: Final text did not match. Actual: " + finalText);
-		}
-		// Final screenshot
-		ScreenshotUtil.capture(driver, "EnableDisable_Final");
+    // ------------------------- SETUP ------------------------------
+    @BeforeMethod(alwaysRun = true)
+    public void setup() {
 
-	}
+        driver = getDriver();
+        if (driver == null) {
+            throw new IllegalStateException("Driver is null — BaseTest did not initialize WebDriver!");
+        }
 
-	@AfterTest
-	public void browserClose() {
-		if (driver != null) {
-			driver.quit();
-		}
-	}
+        try { driver.manage().window().maximize(); } catch (Exception ignored) {}
 
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+
+        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        js = (JavascriptExecutor) driver;
+
+        log.info("Driver successfully initialized for EnableDisableDemoTest");
+    }
+
+    // ---------------------------- TEST -----------------------------
+    @Test
+    public void enabledisableCheck() {
+
+        driver.get("https://www.letskodeit.com/practice");
+
+        WebElement field = driver.findElement(By.id("enabled-example-input"));
+        field.sendKeys("Java");
+
+        String beforeDisable = field.getAttribute("value");
+        System.out.println("Text before disabling: " + beforeDisable);
+
+        WebElement disableBtn = driver.findElement(By.id("disabled-button"));
+        disableBtn.click();
+
+        if (!field.isEnabled()) {
+            System.out.println("PASS: Field disabled successfully.");
+        } else {
+            System.out.println("FAIL: Field did NOT disable.");
+        }
+
+        ScreenshotUtil.capture(driver, "EnableDisable_Check");
+
+        // Re-enable the field
+        WebElement enableBtn = driver.findElement(By.id("enabled-button"));
+        wait.until(ExpectedConditions.elementToBeClickable(enableBtn));
+        enableBtn.click();
+
+        // Wait until field becomes enabled again
+        wait.until(d -> field.isEnabled());
+
+        // Append "Programming" using Actions to ensure cursor moves to end
+        Actions actions = new Actions(driver);
+        actions.moveToElement(field).click().sendKeys(Keys.END).perform();
+        field.sendKeys("Programming");
+
+        String finalValue = field.getAttribute("value");
+        System.out.println("Final text: " + finalValue);
+
+        if ("JavaProgramming".equalsIgnoreCase(finalValue)) {
+            System.out.println("PASS: Final text is correct");
+        } else {
+            System.out.println("FAIL: Expected 'JavaProgramming' but got: " + finalValue);
+        }
+
+        ScreenshotUtil.capture(driver, "EnableDisable_Final");
+    }
+
+    // -------------------------- CLEANUP ----------------------------
+    @AfterMethod(alwaysRun = true)
+    public void cleanup() {
+        // DO NOT QUIT DRIVER HERE — BaseTest handles cleanup!
+    }
 }

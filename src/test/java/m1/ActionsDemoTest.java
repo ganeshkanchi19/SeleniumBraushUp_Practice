@@ -7,30 +7,38 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
 import base.BaseTest;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import utils.ScreenshotUtil;
-import utils.ScrollUtil;
 
 public class ActionsDemoTest extends BaseTest {
-	WebDriver driver;
-	WebDriverWait wait;
+	private WebDriver driver;
+	private WebDriverWait wait;
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
-		driver.manage().window().maximize();
-		// short implicit is fine but prefer explicit waits below
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
+	@BeforeMethod(alwaysRun = true)
+	public void init() {
+		// get driver initialized by BaseTest -> DriverFactory
+		driver = getDriver();
+		if (driver == null) {
+			throw new RuntimeException("Driver is NULL — BaseTest did not initialize it!");
+		}
+
+		try {
+			driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
+		} catch (Exception ignored) {
+		}
+
+		try {
+			driver.manage().window().maximize();
+		} catch (Exception ignored) {
+		}
+
 		wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 	}
 
@@ -111,9 +119,6 @@ public class ActionsDemoTest extends BaseTest {
 		WebElement pointMe = driver.findElement(By.xpath("//button[text()='Point Me']"));
 		act.moveToElement(pointMe).perform();
 
-		// Move to right blank area (e.g., 150 px right) and click
-		// act.moveToElement(pointMe, 150, 0).click().perform();
-
 		// Wait for dropdown options to appear
 		wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@class='dropdown-content']/a")));
@@ -161,18 +166,12 @@ public class ActionsDemoTest extends BaseTest {
 		act.clickAndHold(leftHandle).moveByOffset(-200, 0) // enough to hit the far left
 				.release().perform();
 
-		// Getting the updated price range value after performing left handle slide activity
+		// Getting the updated price range value after performing left handle slide
+		// activity
 		String valuelefthandle = priceRange.getAttribute("value");
 		System.out.println("Updated price range after performing left handle slide: " + valuelefthandle);
 		ScreenshotUtil.capture(driver, "Slider_PriceRange_After_left_handle");
-
 	}
 
-	@AfterTest
-	public void browserClose() {
-		if (driver != null) {
-			driver.quit();
-		}
-	}
-
+	// No @AfterTest here – BaseTest handles driver cleanup
 }

@@ -1,51 +1,49 @@
 package m1;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.Duration;
 
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Listeners;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import base.BaseTest;
+import utils.ScreenshotUtil;
 
-public class FirstScript {
-	WebDriver driver;
+public class FirstScript extends BaseTest {
+	private WebDriver driver;
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
+	@BeforeMethod(alwaysRun = true)
+	public void setup() {
+		// get driver created by BaseTest (thread-safe)
+		driver = getDriver();
+		if (driver == null) {
+			throw new IllegalStateException("Driver is null — BaseTest failed to initialize it.");
+		}
+
+		try {
+			driver.manage().window().maximize();
+		} catch (Exception ignored) {
+		}
+		try {
+			driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+		} catch (Exception ignored) {
+		}
+
+		System.out.println("[FirstScript] Browser initialized successfully.");
 	}
 
 	@Test
-	public void printCurrentURL() throws IOException {
+	public void printCurrentURL() {
 		driver.get("https://www.letskodeit.com/practice");
-		driver.manage().window().maximize();
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+
 		String currentURL = driver.getCurrentUrl();
 		String title = driver.getTitle();
-		//Taking screenshot
-		File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-		String destPath = System.getProperty("user.dir") + "/Screenshots/SeelctFromDrpDwn.png";
-		File dest = new File(destPath);
-		dest.getParentFile().mkdirs(); // create folder if missing
-		FileUtils.copyFile(src, dest);
-		System.out.println("Current url of the page is : " + currentURL);
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-		System.out.println("Title of the web page is : " + title);
 
+		ScreenshotUtil.capture(driver, "PrintingCurrentUrl");
+
+		System.out.println("Current URL of the page is : " + currentURL);
+		System.out.println("Title of the webpage is : " + title);
 	}
 
-	@AfterTest
-	public void browserClose() {
-		driver.quit();
-	}
+	// ❌ Do NOT quit driver here — BaseTest handles teardown automatically
 }

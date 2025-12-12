@@ -1,53 +1,54 @@
 package m1;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.Select;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Listeners;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import base.BaseTest;
+import utils.ScreenshotUtil;
 
-public class SelectDemo {
-	WebDriver driver;
+public class SelectDemo extends BaseTest {
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
+	private WebDriver driver;
+
+	@BeforeMethod(alwaysRun = true)
+	public void setup() {
+		driver = getDriver();
+		if (driver == null) {
+			throw new IllegalStateException("Driver is NULL — BaseTest failed to initialize WebDriver.");
+		}
+
+		driver.manage().window().maximize();
+		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 	}
 
 	@Test
 	public void selectTestCheck() throws IOException {
+
 		driver.get("https://www.letskodeit.com/practice");
-		driver.manage().window().maximize();
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-		WebElement carSel = driver.findElement(By.xpath("//select[@id='carselect']"));
+
+		WebElement carSel = driver.findElement(By.id("carselect"));
 		Select s = new Select(carSel);
+
+		// Select Benz
 		s.selectByVisibleText("Benz");
-		String selcText = s.getFirstSelectedOption().getText();
-		System.out.println("Selected value is: " + selcText);
-		File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-		String destPath = System.getProperty("user.dir") + "/Screenshots/SeelctFromDrpDwn.png";
-		File dest = new File(destPath);
-		dest.getParentFile().mkdirs(); // create folder if missing
-		FileUtils.copyFile(src, dest);
-	}
+		String selectedText = s.getFirstSelectedOption().getText();
+		System.out.println("Selected value is: " + selectedText);
 
-	@AfterTest
-	public void browserClose() {
-		driver.quit();
-	}
+		// List all dropdown options
+		List<WebElement> allOptions = s.getOptions();
+		for (WebElement option : allOptions) {
+			System.out.println("Available dropdown option: " + option.getText());
+		}
 
+		// Capture screenshot
+		ScreenshotUtil.capture(driver, "Select_From_Dropdown");
+	}
 }

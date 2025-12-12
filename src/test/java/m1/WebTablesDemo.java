@@ -6,55 +6,67 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import base.BaseTest;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import utils.ScreenshotUtil;
 
-public class WebTablesDemo extends BaseTest{
-	WebDriver driver;
-	WebDriverWait wait;
+public class WebTablesDemo extends BaseTest {
+	private WebDriver driver;
+	private WebDriverWait wait;
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
-		driver.manage().window().maximize();
-		// short implicit is fine but prefer explicit waits below
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
+	@BeforeMethod(alwaysRun = true)
+	public void init() {
+		// get the driver created by BaseTest -> DriverFactory
+		driver = getDriver();
+		if (driver == null) {
+			throw new RuntimeException("Driver is null — BaseTest did not initialize it!");
+		}
+
+		// safe post-creation setup (timeouts / window size)
+		try {
+			driver.manage().window().maximize();
+		} catch (Exception ignored) {
+		}
+		try {
+			driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+		} catch (Exception ignored) {
+		}
+
 		wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 	}
 
 	@Test
 	public void webTablesTest() {
 		driver.get("https://www.letskodeit.com/practice");
-		WebElement prodTable = driver.findElement(By.xpath("//table[@id='product']"));
-		wait.until(ExpectedConditions.visibilityOf(prodTable));
+
+		// wait for the table to be present & visible (use locator version)
+		By tableLocator = By.xpath("//table[@id='product']");
+		wait.until(ExpectedConditions.visibilityOfElementLocated(tableLocator));
+		WebElement prodTable = driver.findElement(tableLocator);
+
+		// scroll into view and read text
 		((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({behavior:'auto', block:'center'});",
 				prodTable);
+
 		String fullTableText = prodTable.getText();
-		// Printing full table text
 		System.out.println("Full Table Text:");
 		System.out.println(fullTableText);
+
 		ScreenshotUtil.capture(driver, "Capturing_FullTableText");
-		String courseText = driver.findElement(By.xpath("//table[@id='product']/tbody/tr[1]/th[2]")).getText();
-		System.out.println("Extracted text for course is : " + courseText);
-		String pythoncourse = driver.findElement(By.xpath("//table[@id='product']/tbody/tr[3]/td[2]")).getText();
-		System.out.println("Extracted specific cell text is : " + pythoncourse);
 
-	}
+		// safer extraction using explicit waits for the specific cells
+		String courseHeader = wait.until(
+				ExpectedConditions.visibilityOfElementLocated(By.xpath("//table[@id='product']/tbody/tr[1]/th[2]")))
+				.getText();
+		System.out.println("Extracted header text for course is : " + courseHeader);
 
-	@AfterTest
-	public void browserClose() {
-		if (driver != null) {
-			driver.quit();
-		}
+		String pythonCourse = wait.until(
+				ExpectedConditions.visibilityOfElementLocated(By.xpath("//table[@id='product']/tbody/tr[3]/td[2]")))
+				.getText();
+		System.out.println("Extracted specific cell text is : " + pythonCourse);
 	}
 }

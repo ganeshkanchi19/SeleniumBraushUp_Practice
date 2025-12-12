@@ -5,76 +5,60 @@ import java.time.Duration;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import base.BaseTest;
-import io.github.bonigarcia.wdm.WebDriverManager;
-import io.reactivex.rxjava3.functions.Action;
 import utils.ScreenshotUtil;
 
 public class TooltipDemoTest extends BaseTest {
-	WebDriver driver;
-	WebDriverWait wait;
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
-		driver.manage().window().maximize();
-		// short implicit is fine but prefer explicit waits below
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-		wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-	}
+    private WebDriver driver;
+    private WebDriverWait wait;
 
-	@Test
-	public void tooltipHandlecheck() {
-		// getting the URL
-		driver.get("https://jqueryui.com/tooltip/");
+    @BeforeMethod(alwaysRun = true)
+    public void init() {
+        driver = getDriver();
 
-		// Instantiate Action Class
-		Actions actions = new Actions(driver);
+        driver.manage().window().maximize();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    }
 
-		String expTooltip = "We ask for your age only for statistical purposes.";
+    @Test
+    public void tooltipHandlecheck() {
 
-		// Switching ton the frame first
-		driver.switchTo().frame(0);
+        driver.get("https://jqueryui.com/tooltip/");
 
-		// Find the age field
-		WebElement urage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@id='age']")));
-		actions.moveToElement(urage).perform();
-		By tooltipContent = By.cssSelector(".ui-tooltip .ui-tooltip-content");
+        Actions actions = new Actions(driver);
+        String expectedTooltip = "We ask for your age only for statistical purposes.";
 
-		// wait for the tooltip to be visible then read its text
-	    WebElement tooltip = wait.until(ExpectedConditions.visibilityOfElementLocated(tooltipContent));
-		String toolTipText = tooltip.getText().trim();
-		System.out.println("toolTipText-->" + toolTipText);
+        // Switch to the example frame
+        driver.switchTo().frame(0);
 
-		// Printing the actual tooltip value
-		System.out.println("Actual title of the tooltip is : " + toolTipText);
+        WebElement ageField = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(By.id("age"))
+        );
+        actions.moveToElement(ageField).perform();
 
-		// Comparing both expected and actual values
-		if (toolTipText.equalsIgnoreCase(expTooltip)) {
-			System.out.println("Tooltip test case is passed");
-		} else {
-			System.out.println("Tooltip test case is failed");
-		}
+        WebElement tooltip = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.cssSelector(".ui-tooltip .ui-tooltip-content")
+                )
+        );
 
-		// Taking the screenshot
-		ScreenshotUtil.capture(driver, "TooltTipCheck");
+        String actualTooltip = tooltip.getText().trim();
+        System.out.println("Tooltip Text: " + actualTooltip);
 
-	}
+        if (actualTooltip.equals(expectedTooltip)) {
+            System.out.println("Tooltip test PASSED");
+        } else {
+            System.out.println("Tooltip test FAILED");
+        }
 
-	@AfterTest
-	public void browserClose() {
-		if (driver != null) {
-			driver.quit();
-		}
-	}
-
+        ScreenshotUtil.capture(driver, "TooltipCheck");
+    }
 }

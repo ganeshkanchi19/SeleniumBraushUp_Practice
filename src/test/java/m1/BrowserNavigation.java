@@ -1,106 +1,133 @@
 package m1;
 
-import java.io.Console;
 import java.time.Duration;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Listeners;
+import org.testng.annotations.AfterMethod; // optional if you want per-method cleanup; removed here
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import base.BaseTest;
-import io.github.bonigarcia.wdm.WebDriverManager;
+import utils.ScreenshotUtil;
 
+/**
+ * BrowserNavigation test rewritten to use BaseTest/DriverFactory.
+ */
 public class BrowserNavigation extends BaseTest {
-	WebDriver driver;
+	private WebDriver driver;
+	private WebDriverWait wait;
+	private JavascriptExecutor js;
 
-	@BeforeTest
-	public void launchBrowser() {
-		WebDriverManager.chromedriver().setup();
-		driver = new ChromeDriver();
+	@BeforeMethod(alwaysRun = true)
+	public void beforeMethod() {
+		driver = getDriver();
+		if (driver == null) {
+			throw new IllegalStateException("Driver is null — BaseTest did not initialize it!");
+		}
+
+		// safe maximize (remote environments may not support maximize)
+		try {
+			driver.manage().window().maximize();
+		} catch (Exception ignored) {
+		}
+
+		// explicit wait used throughout
+		wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+		js = (JavascriptExecutor) driver;
 	}
 
 	@Test
 	public void browserNavigateCheck() {
 		driver.get("https://demoqa.com/text-box");
-		driver.manage().window().maximize();
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-		WebElement fullname = driver.findElement(By.xpath("//input[@id='userName']"));
-		WebElement email = driver.findElement(By.xpath("//input[@id='userEmail']"));
-		WebElement curAddr = driver.findElement(By.xpath("//textarea[@id='currentAddress']"));
-		WebElement PermAddr = driver.findElement(By.xpath("//textarea[@id='permanentAddress']"));
-		WebElement SubBtn = driver.findElement(By.xpath("//button[@id='submit']"));
-		WebElement Nameline = driver.findElement(By.xpath("//p[@id='name']/text()[2]"));
-		WebElement TextBoxTitle = driver.findElement(By.xpath("//h1[text()='Text Box']"));
 
-		// scroll to center, then a bit up so ad doesn't cover button
-		JavascriptExecutor js = (JavascriptExecutor) driver;
+		By fullNameBy = By.xpath("//input[@id='userName']");
+		By emailBy = By.xpath("//input[@id='userEmail']");
+		By curAddrBy = By.xpath("//textarea[@id='currentAddress']");
+		By permAddrBy = By.xpath("//textarea[@id='permanentAddress']");
+		By submitBtnBy = By.xpath("//button[@id='submit']");
+		By outputNameBy = By.id("name"); // <p id="name">Name: ...</p>
+		By pageTitleBy = By.xpath("//h1[text()='Text Box']");
 
-		// 1) Scroll submit button into view (roughly middle)
-		js.executeScript("arguments[0].scrollIntoView({block: 'center'});", SubBtn);
+		// wait for title visible to ensure page loaded
+		wait.until(ExpectedConditions.visibilityOfElementLocated(pageTitleBy));
 
-		// 2) Move slightly up so the bottom ad banner doesn't overlap
-		js.executeScript("window.scrollBy(0, -120);");
+		WebElement fullname = wait.until(ExpectedConditions.elementToBeClickable(fullNameBy));
+		WebElement email = driver.findElement(emailBy);
+		WebElement curAddr = driver.findElement(curAddrBy);
+		WebElement permAddr = driver.findElement(permAddrBy);
+		WebElement submitBtn = driver.findElement(submitBtnBy);
 
-		// 3) Click using JavaScript (bypasses overlay)
-		js.executeScript("arguments[0].click();", SubBtn);
-
-//		((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", SubBtn);
-//		((JavascriptExecutor) driver).executeScript("window.scrollBy(0, 500);");
-//		
-//		// explicit wait for clickability
-//		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-//		wait.until(ExpectedConditions.elementToBeClickable(SubBtn));
-//		
-//		try {
-//		    SubBtn.click();
-//		} catch (ElementClickInterceptedException e) {
-//		    System.out.println("Normal click intercepted, clicking with JS instead");
-//		    ((JavascriptExecutor) driver).executeScript("arguments[0].click();", SubBtn);
-//		}
-
-		System.out.println("Starting to filling the full name  value");
-		String FNameVal = fullname.getText();
-		fullname.sendKeys("Ganesh Kanchi");
-		// System.out.println("Full Name filled is : " + FNameVal);
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(2));
-		email.sendKeys("ganukanchi2018@gmail.com");
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
-		curAddr.sendKeys("Bachelors PG, Hinjewadi");
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-		PermAddr.sendKeys("Flat No 809, 2nd floor, Near BOSS PG, Bachelors PG, Hinjewadi");
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-		SubBtn.click();
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-		// Get displayed output
-		String NameText = Nameline.getText();
-		System.out.println("Submitted Full Name is : " + NameText);
-		// Extract only name part
-		// String ActName = outputText.replace("Name:", "").trim();
-		System.out.println("Actual extracted value is : " + NameText);
-		// Expected value
-		String ExpName = "Ganesh Kanchi";
-		if (NameText == ExpName) {
-			System.out.println("Test case is passed");
-		} else {
-			System.out.println("Test case is failed");
+		// scroll submit button roughly to center, then shift a bit to avoid overlays
+		try {
+			js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitBtn);
+			js.executeScript("window.scrollBy(0, -120);"); // move up to avoid footer overlay
+		} catch (Exception ignored) {
 		}
 
+		// Fill fields
+		fullname.clear();
+		fullname.sendKeys("Ganesh Kanchi");
+
+		email.clear();
+		email.sendKeys("ganukanchi2018@gmail.com");
+
+		curAddr.clear();
+		curAddr.sendKeys("Bachelors PG, Hinjewadi");
+
+		permAddr.clear();
+		permAddr.sendKeys("Flat No 809, 2nd floor, Near BOSS PG, Bachelors PG, Hinjewadi");
+
+		// Try to click the submit button; if intercepted use JS click as fallback
+		try {
+			wait.until(ExpectedConditions.elementToBeClickable(submitBtn));
+			submitBtn.click();
+		} catch (ElementClickInterceptedException ex) {
+			System.out.println("Normal click intercepted; clicking with JS instead.");
+			try {
+				js.executeScript("arguments[0].click();", submitBtn);
+			} catch (Exception jsEx) {
+				System.err.println("JS click also failed: " + jsEx.getMessage());
+				throw jsEx;
+			}
+		} catch (Exception ex) {
+			// Last-chance attempt: JS click
+			try {
+				js.executeScript("arguments[0].click();", submitBtn);
+			} catch (Exception jsEx) {
+				System.err.println("Failed to click submit button: " + jsEx.getMessage());
+				throw new RuntimeException(jsEx);
+			}
+		}
+
+		// Wait for the output block to be visible and read the text
+		WebElement nameOutput = wait.until(ExpectedConditions.visibilityOfElementLocated(outputNameBy));
+		String rawNameText = nameOutput.getText(); // e.g. "Name:Ganesh Kanchi"
+		System.out.println("Raw displayed output: " + rawNameText);
+
+		// Extract name after "Name:" prefix
+		String actualName = rawNameText;
+		if (rawNameText != null && rawNameText.contains(":")) {
+			actualName = rawNameText.substring(rawNameText.indexOf(":") + 1).trim();
+		}
+
+		System.out.println("Submitted Full Name is : " + actualName);
+
+		String expectedName = "Ganesh Kanchi";
+		if (expectedName.equals(actualName)) {
+			System.out.println("Test case is passed");
+		} else {
+			System.out.println("Test case is failed - expected: '" + expectedName + "' actual: '" + actualName + "'");
+		}
+
+		// capture screenshot for debugging
+		ScreenshotUtil.capture(driver, "BrowserNavigation_AfterSubmit");
 	}
 
-	@AfterTest
-	public void browserClose() {
-		driver.quit();
-	}
-
+	// No @AfterMethod here: BaseTest handles driver.quit() in tearDown
 }
