@@ -21,7 +21,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                bat 'mvn -Dci.headless=true -Dsurefire.suiteXmlFiles=src/test/resources/testng-parallel.xml test'
+                bat 'mvn -B -Dci.headless=true -Dheadless=true -Duse.remote=false -Dsurefire.suiteXmlFiles=testng.xml test'
             }
         }
 
