@@ -42,18 +42,18 @@ pipeline {
         }
     }
 
-    /* ✅ POST BUILD ACTIONS (THIS WAS MISSING EARLIER) */
+    /* POST BUILD ACTIONS */
     post {
 
         success {
             emailext(
-                subject: "✅ BUILD SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "BUILD SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
 Hi Ganesh,
 
-✅ Build SUCCESS
+Build Status: SUCCESS
 
-Job: ${env.JOB_NAME}
+Job Name: ${env.JOB_NAME}
 Build Number: ${env.BUILD_NUMBER}
 
 Build URL:
@@ -71,13 +71,13 @@ Jenkins
 
         failure {
             emailext(
-                subject: "❌ BUILD FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "BUILD FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
 Hi Ganesh,
 
-❌ Build FAILED
+Build Status: FAILED
 
-Job: ${env.JOB_NAME}
+Job Name: ${env.JOB_NAME}
 Build Number: ${env.BUILD_NUMBER}
 
 Check logs here:
