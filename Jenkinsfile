@@ -42,7 +42,54 @@ pipeline {
         }
     }
 
+    /* ✅ POST BUILD ACTIONS (THIS WAS MISSING EARLIER) */
     post {
+
+        success {
+            emailext(
+                subject: "✅ BUILD SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+Hi Ganesh,
+
+✅ Build SUCCESS
+
+Job: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+
+Build URL:
+${env.BUILD_URL}
+
+Extent Report:
+${env.BUILD_URL}Extent_20Report/
+
+Regards,
+Jenkins
+""",
+                to: 'ganukanchi2018@gmail.com'
+            )
+        }
+
+        failure {
+            emailext(
+                subject: "❌ BUILD FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+Hi Ganesh,
+
+❌ Build FAILED
+
+Job: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+
+Check logs here:
+${env.BUILD_URL}
+
+Regards,
+Jenkins
+""",
+                to: 'ganukanchi2018@gmail.com'
+            )
+        }
+
         always {
             junit 'target/surefire-reports/*.xml'
         }
