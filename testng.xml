@@ -4,9 +4,10 @@
 	<test name="Run All Tests in Package m1">
 		<parameter name="browser" value="chrome" />
 
-		<packages>
-			<package name="m1" />
-		</packages>
+		<classes>
+			<class name="m1.ShadowDOMDemoTest" />
+		</classes>
+
 	</test>
 
 	<listeners>
