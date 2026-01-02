@@ -1,5 +1,15 @@
 pipeline {
     agent any
+     options {
+        timestamps()
+        timeout(time: 2, unit: 'HOURS')
+    }
+    triggers {
+        // Every Friday at 8 PM (server time)
+        cron('0 20 * * 5')
+        // For IST timezone, use:
+        // cron('TZ=Asia/Kolkata\n0 20 * * 5')
+    }
 
     tools {
         maven 'Maven3'
@@ -34,6 +44,9 @@ pipeline {
         stage('Publish Extent HTML Report') {
             steps {
                 publishHTML(target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
                     reportDir: 'reports',
                     reportFiles: 'extent-report.html',
                     reportName: 'Extent Report'
