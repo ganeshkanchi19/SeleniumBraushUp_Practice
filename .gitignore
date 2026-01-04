@@ -1,8 +1,23 @@
+# ===== Maven =====
 /target/
+/.mvn/
+
+# ===== Test Outputs =====
 /test-output/
 /reports/
 /Screenshots/
+*.log
+logs/
+
+# ===== IDE (Eclipse) =====
 /bin/
-/.classpath
+.classpath
 .project
 .settings/
+
+# ===== OS / Editor =====
+.DS_Store
+*.swp
+
+# ===== Kubernetes =====
+*.yaml.bak
