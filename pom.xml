@@ -13,8 +13,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<!-- Java source/target versions -->
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<!-- Lombok version -->
+		<lombok.version>1.18.32</lombok.version>
 	</properties>
 
 	<dependencies>
@@ -86,6 +88,13 @@
 					<target>${maven.compiler.target}</target>
 					<encoding>${project.build.sourceEncoding}</encoding>
 					<!-- recommended to enable annotation processing as needed -->
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 

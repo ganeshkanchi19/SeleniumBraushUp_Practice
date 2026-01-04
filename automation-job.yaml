@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: selenium-test-job
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: selenium-tests
+          image: selenium-tests:latest
+          imagePullPolicy: IfNotPresent
+
+          # IMPORTANT: use shell so we can run multiple commands
+          command: ["/bin/sh", "-c"]
+
+          args:
+            - |
+              echo "Running Selenium tests...";
+              mvn test \
+                -Duse.remote=true \
+                -Dgrid.url=http://selenium-grid-selenium-hub.default.svc.cluster.local:4444/wd/hub ;
+              echo "Copying reports...";
+              mkdir -p /reports ;
+              cp -r target/surefire-reports/* /reports || true ;
+              echo "Done."
+
+          volumeMounts:
+            - name: reports-volume
+              mountPath: /reports
+
+      volumes:
+        - name: reports-volume
+          emptyDir: {}
