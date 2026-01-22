@@ -1,23 +1,24 @@
-# ===== Maven =====
-/target/
-/.mvn/
+# ===== Maven / Build Logs =====
+maven-output.log
+deps-verbose.txt
 
-# ===== Test Outputs =====
-/test-output/
-/reports/
-/Screenshots/
-*.log
+# ===== TestNG / Test Output Logs =====
+test-output.log
+
+# ===== Test Output & Reports =====
+test-output/
+target/
+reports/
+screenshots/
 logs/
 
-# ===== IDE (Eclipse) =====
-/bin/
+# ===== IDE =====
 .classpath
 .project
 .settings/
+.idea/
+.vscode/
 
-# ===== OS / Editor =====
+# ===== OS =====
 .DS_Store
-*.swp
-
-# ===== Kubernetes =====
-*.yaml.bak
+Thumbs.db
