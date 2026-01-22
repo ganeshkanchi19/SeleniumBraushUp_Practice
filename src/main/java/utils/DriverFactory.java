@@ -1,63 +1,76 @@
 package utils;
 
+import java.net.URL;
 import java.time.Duration;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-
-import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class DriverFactory {
+
 	private static final ThreadLocal<WebDriver> TL_DRIVER = new ThreadLocal<>();
+
+	private DriverFactory() {
+		// prevent object creation
+	}
 
 	public static WebDriver getDriver() {
 		return TL_DRIVER.get();
 	}
 
-	public static void setDriver(WebDriver driver) {
+	private static void setDriver(WebDriver driver) {
 		TL_DRIVER.set(driver);
 	}
 
+	public static void initChromeDriver() {
+		try {
+			boolean isHeadless = Boolean.parseBoolean(System.getProperty("headless", "false"));
+
+			boolean useRemote = Boolean.parseBoolean(System.getProperty("use.remote", "false"));
+
+//			System.out.println("Running Chrome in headless mode = " + isHeadless);
+//			System.out.println("Running tests on Remote Grid = " + useRemote);
+
+			ChromeOptions options = new ChromeOptions();
+
+			// Required for Docker / Kubernetes
+			options.addArguments("--no-sandbox");
+			options.addArguments("--disable-dev-shm-usage");
+
+			if (isHeadless) {
+				options.addArguments("--headless=new");
+				options.addArguments("--window-size=1920,1080");
+			} else {
+				options.addArguments("--start-maximized");
+			}
+
+			WebDriver driver;
+
+			if (useRemote) {
+				String gridUrl = System.getProperty("grid.url",
+						"http://selenium-grid-selenium-hub.default.svc:4444/wd/hub");
+				driver = new RemoteWebDriver(new URL(gridUrl), options);
+			} else {
+				driver = new ChromeDriver(options);
+			}
+
+			driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+			driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
+
+			setDriver(driver);
+
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to initialize WebDriver", e);
+		}
+	}
+
 	public static void removeDriver() {
-		WebDriver drv = TL_DRIVER.get();
-		if (drv != null) {
-			try {
-				drv.quit();
-			} catch (Exception e) {
-				/* ignore */ }
+		WebDriver driver = TL_DRIVER.get();
+		if (driver != null) {
+			driver.quit();
 			TL_DRIVER.remove();
 		}
 	}
-
-	/**
-	 * Initialize a ChromeDriver for this thread. You can switch to other browsers
-	 * by adding similar methods.
-	 */
-	public static void initChromeDriver() {
-		// Setup chromedriver binary
-		WebDriverManager.chromedriver().setup();
-
-		ChromeOptions options = new ChromeOptions();
-
-		// If you want headless on CI, set system property -Dheadless=true
-		String headless = System.getProperty("headless", "false");
-		if (headless.equalsIgnoreCase("true")) {
-			// newer chrome headless flag
-			options.addArguments("--headless=new");
-			options.addArguments("--disable-gpu");
-			options.addArguments("--no-sandbox");
-			options.addArguments("--disable-dev-shm-usage");
-		}
-
-		// Common options
-		options.addArguments("--window-size=1920,1080");
-
-		WebDriver driver = new ChromeDriver(options);
-		driver.manage().window().maximize(); // <-- IMPORTANT FIX
-		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-		setDriver(driver);
-	}
-
 }
-

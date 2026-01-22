@@ -1,25 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testng-results ignored="0" total="1" passed="1" failed="0" skipped="0">
+<testng-results ignored="0" total="2" passed="2" failed="0" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2025-11-24T16:05:23 IST" name="Surefire suite" finished-at="2025-11-24T16:05:34 IST" duration-ms="11029">
+  <suite started-at="2026-01-21T18:38:28 IST" name="OrangeHRM Suite" finished-at="2026-01-21T18:38:45 IST" duration-ms="16866">
     <groups>
     </groups>
-    <test started-at="2025-11-24T16:05:23 IST" name="Surefire test" finished-at="2025-11-24T16:05:34 IST" duration-ms="11029">
-      <class name="m1.CheckBoxTest">
-        <test-method is-config="true" signature="launchBrowser()[pri:0, instance:m1.CheckBoxTest@59505b48]" started-at="2025-11-24T16:05:23 IST" name="launchBrowser" finished-at="2025-11-24T16:05:26 IST" duration-ms="2787" status="PASS">
+    <test started-at="2026-01-21T18:38:28 IST" name="CosmocodeTesting" finished-at="2026-01-21T18:38:45 IST" duration-ms="16866">
+      <class name="m1.PrintingEuroCurrencyNames">
+        <test-method is-config="true" signature="clearReportsAndScreenshots()[pri:0, instance:m1.PrintingEuroCurrencyNames@3ad83a66]" started-at="2026-01-21T18:38:28 IST" name="clearReportsAndScreenshots" finished-at="2026-01-21T18:38:28 IST" duration-ms="26" status="PASS">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- launchBrowser -->
-        <test-method signature="verifyCheckBox()[pri:0, instance:m1.CheckBoxTest@59505b48]" started-at="2025-11-24T16:05:26 IST" name="verifyCheckBox" finished-at="2025-11-24T16:05:34 IST" duration-ms="7925" status="PASS">
+        </test-method> <!-- clearReportsAndScreenshots -->
+        <test-method is-config="true" signature="baseSetup(java.lang.String,org.testng.ITestContext)[pri:0, instance:m1.PrintingEuroCurrencyNames@3ad83a66]" started-at="2026-01-21T18:38:29 IST" name="baseSetup" finished-at="2026-01-21T18:38:31 IST" duration-ms="2836" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[chrome]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA[org.testng.TestRunner@30814f43]]>
+              </value>
+            </param>
+          </params>
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- verifyCheckBox -->
-        <test-method is-config="true" signature="browserClose()[pri:0, instance:m1.CheckBoxTest@59505b48]" started-at="2025-11-24T16:05:34 IST" name="browserClose" finished-at="2025-11-24T16:05:34 IST" duration-ms="276" status="PASS">
+        </test-method> <!-- baseSetup -->
+        <test-method signature="printEuroNames()[pri:0, instance:m1.PrintingEuroCurrencyNames@3ad83a66]" started-at="2026-01-21T18:38:31 IST" name="printEuroNames" finished-at="2026-01-21T18:38:35 IST" duration-ms="3794" status="PASS">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- browserClose -->
-      </class> <!-- m1.CheckBoxTest -->
-    </test> <!-- Surefire test -->
-  </suite> <!-- Surefire suite -->
+        </test-method> <!-- printEuroNames -->
+        <test-method is-config="true" signature="baseTearDown()[pri:0, instance:m1.PrintingEuroCurrencyNames@3ad83a66]" started-at="2026-01-21T18:38:35 IST" name="baseTearDown" finished-at="2026-01-21T18:38:36 IST" duration-ms="460" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- baseTearDown -->
+      </class> <!-- m1.PrintingEuroCurrencyNames -->
+      <class name="m1.StoringCurrencyCountInMap">
+        <test-method is-config="true" signature="baseSetup(java.lang.String,org.testng.ITestContext)[pri:0, instance:m1.StoringCurrencyCountInMap@338fc1d8]" started-at="2026-01-21T18:38:36 IST" name="baseSetup" finished-at="2026-01-21T18:38:37 IST" duration-ms="1867" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[chrome]]>
+              </value>
+            </param>
+            <param index="1">
+              <value>
+                <![CDATA[org.testng.TestRunner@30814f43]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- baseSetup -->
+        <test-method signature="printCurrencyCount()[pri:0, instance:m1.StoringCurrencyCountInMap@338fc1d8]" started-at="2026-01-21T18:38:37 IST" name="printCurrencyCount" finished-at="2026-01-21T18:38:45 IST" duration-ms="7464" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- printCurrencyCount -->
+        <test-method is-config="true" signature="baseTearDown()[pri:0, instance:m1.StoringCurrencyCountInMap@338fc1d8]" started-at="2026-01-21T18:38:45 IST" name="baseTearDown" finished-at="2026-01-21T18:38:45 IST" duration-ms="364" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- baseTearDown -->
+      </class> <!-- m1.StoringCurrencyCountInMap -->
+    </test> <!-- CosmocodeTesting -->
+  </suite> <!-- OrangeHRM Suite -->
 </testng-results>

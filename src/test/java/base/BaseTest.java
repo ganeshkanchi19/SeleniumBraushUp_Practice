@@ -2,14 +2,14 @@ package base;
 
 import org.testng.annotations.*;
 import org.testng.ITestContext;
-
+import utils.DriverFactory;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.openqa.selenium.WebDriver;
-import utils.DriverFactory;
 import utils.ScreenshotUtil;
+
 
 public class BaseTest {
 

@@ -1,11 +1,11 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="SingleBrowserSuite" parallel="none">
+<suite name="OrangeHRM Suite" parallel="none">
 
-	<test name="Run All Tests in Package m1">
-		<parameter name="browser" value="chrome" />
+	<test name="CosmocodeTesting">
 
 		<classes>
-			<class name="m1.ShadowDOMDemoTest" />
+			<class name="m1.PrintingEuroCurrencyNames" />
+			<class name="m1.StoringCurrencyCountInMap" />
 		</classes>
 
 	</test>
