@@ -17,7 +17,7 @@ public class PrintingLangNames extends BaseTest {
 		currencyPage.printGermanLangNames();
 
 		System.out.println("Count of German words is : " + currencyPage.getGermanLangCount());
-		System.out.println("Master branch change");
+		System.out.println("MASTER_CONFLICT");
 		Assert.assertEquals(currencyPage.getGermanLangCount(), 3);
 		System.out.println("Master branch conflcit coming");
 	}
