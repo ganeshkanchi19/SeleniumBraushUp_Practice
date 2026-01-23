@@ -17,6 +17,7 @@ public class CurrencyTablePage {
 
 	// ================== LOCATORS ==================
 	private By euroCurrencyNames = By.xpath("//td[normalize-space()='Euro']");
+	private By germanLangNames = By.xpath("//td[normalize-space()='German']");
 	private By allCurrencyCells = By.xpath("//td[4]");
 	private By tableRows = By.xpath("//table//tr");
 
@@ -35,16 +36,31 @@ public class CurrencyTablePage {
 	}
 
 	public List<WebElement> getEuroCurrencyElements() {
-		wait.waitForElementVisible(euroCurrencyNames); //safety wait
+		wait.waitForElementVisible(euroCurrencyNames); // safety wait
 		return driver.findElements(euroCurrencyNames);
+	}
+
+	public List<WebElement> getGermanLangElements() {
+		wait.waitForElementVisible(germanLangNames); // safety wait
+		return driver.findElements(germanLangNames);
 	}
 
 	public int getEuroCurrencyCount() {
 		return getEuroCurrencyElements().size();
 	}
 
+	public int getGermanLangCount() {
+		return getGermanLangElements().size();
+	}
+
 	public void printEuroCurrencyNames() {
 		for (WebElement euro : getEuroCurrencyElements()) {
+			System.out.println(euro.getText());
+		}
+	}
+
+	public void printGermanLangNames() {
+		for (WebElement euro : getGermanLangElements()) {
 			System.out.println(euro.getText());
 		}
 	}
